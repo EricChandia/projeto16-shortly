@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import { v4 as uuid } from 'uuid';
 import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
+import { checkEmailExists, insertSession, insertUser, checkUserLogged } from '../repository/authRepository.js';
 
 export async function createUser(req, res) {
     try{
@@ -27,13 +28,15 @@ export async function createUser(req, res) {
       
         const senhaCriptografada = bcrypt.hashSync(user.password, 10);
       
-        const emailExists = await connection.query(`select * from users where email = $1`, [user.email]);
+        const emailExists = await checkEmailExists(user.email);
+
         if(emailExists.rowCount > 0){
             return res.status(409).send("Email já existe!");
         }
     
     
-        await connection.query(`INSERT INTO users (name, "email", "password") values ($1, $2, $3)`, [user.name, user.email, senhaCriptografada]);
+        await insertUser(user.name, user.email, senhaCriptografada);
+
         res.status(201).send('Usuário criado com sucesso');
     }catch(error){
         console.log(error);
@@ -58,7 +61,7 @@ export async function createUser(req, res) {
           return res.sendStatus(422);
         }
       
-        const userLogged = await connection.query(`SELECT * FROM users where email = $1`, [user.email]);
+        const userLogged = await checkUserLogged(user.email);
     
         if(userLogged.rowCount === 0){
             return res.sendStatus(401);
@@ -69,9 +72,7 @@ export async function createUser(req, res) {
         if (bcrypt.compareSync(user.password, userLogged.rows[0].password)) {
           const token = uuid();
    
-          await connection.query(
-            `INSERT INTO sessions ("token", "userId") values ($1, $2)`, [token, userLogged.rows[0].id]
-          );
+          await insertSession(token, userLogged.rows[0].id);
       
           return res.status(201).send({ token, name });
         } else {

@@ -9,7 +9,7 @@ async function validateUser(req, res, next){
         return res.status(400).send("Sessão não existe!");
       }
 
-    res.locals.session = session.rows;
+    res.locals.session = session.rows[0];
 
     next();
 }
