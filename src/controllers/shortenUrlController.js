@@ -1,9 +1,6 @@
-import bcrypt from 'bcrypt';
-import { v4 as uuid } from 'uuid';
 import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
 import { nanoid } from 'nanoid';
-import { query } from 'express';
 
 
 export async function shortenUrl(req,res){
@@ -81,5 +78,78 @@ export async function openShortUrl(req, res){
 
     }catch(error){
         console.log(error);
+        res.sendStatus(500);
     }
 }
+
+export async function deleteUrlById(req, res){
+    try{
+        const { userId } = res.locals.session;
+        const { id: urlId } = req.params;
+    
+        const userUrl = await connection.query(`select * from "shortenedUrls" where id = $1`, [urlId]);
+
+        if(userUrl.rowCount === 0){
+            return res.sendStatus(404);
+        }
+
+
+        if(userUrl.rows[0].userId !== userId){
+            return res.sendStatus(401);
+        }
+    
+        await connection.query(`delete from "shortenedUrls" where id = $1`, [urlId]);
+        return res.sendStatus(204);
+    }catch(error){
+        console.log(error);
+        res.sendStatus(500);
+    }
+}
+
+export async function getUserUrls(req, res){
+    try{
+        const { userId } = res.locals.session;
+    
+        const user = await connection.query(`select users.id, users.name from users where id = $1`, [userId]);
+        if(user.rowCount === 0){
+            res.sendStatus(404);
+        }
+        const userName = user.rows[0].name;
+    
+        let userVisitCountSum = await connection.query(`select SUM("visitCount") as "visitCount" from "shortenedUrls" where "userId" = $1`, [userId]);
+        userVisitCountSum = userVisitCountSum.rows[0].visitCount === null ? 0 : userVisitCountSum.rows[0].visitCount;
+        
+
+        let shortenedUrls = await connection.query(`select * from "shortenedUrls" where "userId" = $1`, [userId]);
+
+        if(shortenedUrls.rowCount === 0){
+            shortenedUrls = {};
+        }else{
+            shortenedUrls = shortenedUrls.rows;
+            let userUrlsArr = [];
+            
+            for(let i=0;i<shortenedUrls.length;i++){
+                const userUrls = { id: shortenedUrls[i].id, shortUrl: shortenedUrls[i].shortUrl, url: shortenedUrls[i].url, visitCount: shortenedUrls[i].visitCount };
+                userUrlsArr.push(userUrls);
+            }
+            shortenedUrls = userUrlsArr;
+        }
+
+        
+        let userUrls = 
+        {
+            id: userId,
+            name: userName,
+            visitCount: userVisitCountSum,
+            shortenedUrls
+        };
+
+        res.status(200).send(userUrls);
+    }catch(error){
+        console.log(error);
+        res.sendStatus(500);
+    }
+}
+
+
+

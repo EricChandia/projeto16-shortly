@@ -74,7 +74,7 @@ export async function createUser(req, res) {
    
           await insertSession(token, userLogged.rows[0].id);
       
-          return res.status(201).send({ token, name });
+          return res.status(201).send({ token });
         } else {
           return res.status(401).send('Senha ou email incorretos!');
         }
