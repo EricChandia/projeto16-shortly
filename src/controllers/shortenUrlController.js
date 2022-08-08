@@ -77,7 +77,7 @@ export async function openShortUrl(req, res){
 
         await connection.query(`update "shortenedUrls" set "visitCount" = $1 where id = $2`, [visitCount+1, id]);
 
-        res.redirect(urlPath);
+        res.redirect(200, urlPath);
 
     }catch(error){
         console.log(error);
