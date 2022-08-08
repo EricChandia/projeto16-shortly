@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid';
 import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
 import { checkEmailExists, insertSession, insertUser, checkUserLogged } from '../repository/authRepository.js';
+import dayjs from 'dayjs';
 
 export async function createUser(req, res) {
     try{
@@ -34,8 +35,8 @@ export async function createUser(req, res) {
             return res.status(409).send("Email já existe!");
         }
     
-    
-        await insertUser(user.name, user.email, senhaCriptografada);
+        const createdAt = dayjs().format("YYYY-MM-DD");
+        await insertUser(user.name, user.email, senhaCriptografada, createdAt);
 
         res.status(201).send('Usuário criado com sucesso');
     }catch(error){

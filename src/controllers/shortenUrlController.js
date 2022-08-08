@@ -1,6 +1,7 @@
 import connection from '../dbStrategy/postgres.js';
 import joi from 'joi';
 import { nanoid } from 'nanoid';
+import dayjs from 'dayjs';
 
 
 export async function shortenUrl(req,res){
@@ -20,12 +21,14 @@ export async function shortenUrl(req,res){
 
         const { url } = req_body;
 
+        const createdAt = dayjs().format("YYYY-MM-DD");
+
         const shortUrl = nanoid();
         const urlExists = await connection.query(`select * from "shortenedUrls" where "url" = $1 and "userId" = $2`, [url, userId]);
         if(urlExists.rowCount > 0){
             await connection.query(`update "shortenedUrls" set "shortUrl" = $1 where "userId" = $2`, [shortUrl, userId]);
         }else{
-            await connection.query(`insert into "shortenedUrls" ("userId", url, "shortUrl", "visitCount") values ($1, $2, $3, $4)`, [userId, url, shortUrl, 0]);
+            await connection.query(`insert into "shortenedUrls" ("userId", url, "shortUrl", "visitCount", "createdAt") values ($1, $2, $3, $4, $5)`, [userId, url, shortUrl, 0, createdAt]);
         }
 
         return res.status(201).send({shortUrl});

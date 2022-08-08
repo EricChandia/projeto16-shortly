@@ -6,9 +6,9 @@ export async function checkEmailExists(email){
 }
 
 
-export async function insertUser(userName, userEmail, senhaCriptografada){
+export async function insertUser(userName, userEmail, senhaCriptografada, createdAt){
 
-    connection.query(`INSERT INTO users (name, "email", "password") values ($1, $2, $3)`, [userName, userEmail, senhaCriptografada]);
+    connection.query(`INSERT INTO users (name, "email", "password", "createdAt") values ($1, $2, $3, $4)`, [userName, userEmail, senhaCriptografada, createdAt]);
 }
 
 export async function checkUserLogged(email){
