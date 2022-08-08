@@ -64,7 +64,8 @@ CREATE TABLE public."shortenedUrls" (
     "userId" integer NOT NULL,
     url text NOT NULL,
     "shortUrl" text NOT NULL,
-    "visitCount" integer NOT NULL
+    "visitCount" integer NOT NULL,
+    "createdAt" date
 );
 
 
@@ -100,7 +101,8 @@ CREATE TABLE public.users (
     id integer NOT NULL,
     name text NOT NULL,
     email text NOT NULL,
-    password text NOT NULL
+    password text NOT NULL,
+    "createdAt" date
 );
 
 
@@ -163,6 +165,14 @@ ALTER TABLE ONLY public.sessions
 
 ALTER TABLE ONLY public."shortenedUrls"
     ADD CONSTRAINT "shortenedUrls_pkey" PRIMARY KEY (id);
+
+
+--
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
 
 
 --
